@@ -1,14 +1,23 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
-import html2canvas from "html2canvas";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import html2canvas from "html2canvas-pro";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 import { Loader2, Volume2, Camera, ArrowLeftRight } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import { voiceTemplatesCompare,languageComparePage } from "../lib/constants/language";
+import { voiceTemplatesCompare, languageComparePage } from "../lib/constants/language";
 import { speakText } from "../lib/textToSpeech";
 import { fetchDistrictSuggestions } from "../lib/fetchDistricts";
 import { backendURL } from "../lib/backendURL";
-
+import Loader from "../components/ui/Loader";
 
 interface DistrictData {
   name: string;
@@ -27,6 +36,7 @@ interface DistrictData {
   ongoingWorks?: number;
   lastUpdated?: string;
 }
+
 const ComparePage: React.FC = () => {
   const { language } = useLanguage();
   const t = languageComparePage[language];
@@ -39,18 +49,15 @@ const ComparePage: React.FC = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 🧠 Suggestion + focus management
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [activeInput, setActiveInput] = useState<"A" | "B" | null>(null);
   const inputBRef = useRef<HTMLInputElement>(null);
 
-  // 🧭 Smart URL handling
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const name = params.get("name");
     if (name) {
       setDistrictAName(name);
-      // Focus second input automatically
       setTimeout(() => {
         inputBRef.current?.focus();
         setActiveInput("B");
@@ -58,11 +65,9 @@ const ComparePage: React.FC = () => {
     }
   }, []);
 
-  // ⚡ Compare handler
   const handleCompare = async () => {
     if (!districtAName || !districtBName)
       return alert("Please enter both districts.");
-
     setLoading(true);
     try {
       const [aRes, bRes] = await Promise.all([
@@ -79,17 +84,14 @@ const ComparePage: React.FC = () => {
     }
   };
 
-  // ✍️ Fetch suggestions
   const handleInputChange = async (value: string, type: "A" | "B") => {
     if (type === "A") setDistrictAName(value);
     else setDistrictBName(value);
-
     if (!value.trim()) return setSuggestions([]);
     const res = await fetchDistrictSuggestions(value);
     setSuggestions(res);
   };
 
-  // 🗣️ Voice summary
   const handleSpeak = () => {
     if (!aData || !bData) return;
     if (typeof window !== "undefined") {
@@ -107,10 +109,19 @@ const ComparePage: React.FC = () => {
     }
   };
 
-  // 📸 Screenshot
   const handleDownload = async () => {
     if (containerRef.current) {
-      const canvas = await html2canvas(containerRef.current, { scale: 2 });
+     const canvas = await html2canvas(containerRef.current, {
+  scale: 2,
+  useCORS: true,
+  backgroundColor: "#ffffff",
+  logging: false,
+  onclone: (documentClone) => {
+    // force fallback background to avoid oklch parsing
+    documentClone.body.style.background = "#ffffff";
+  },
+});
+
       const link = document.createElement("a");
       link.download = `Compare_${aData?.name}_vs_${bData?.name}.png`;
       link.href = canvas.toDataURL("image/png");
@@ -118,7 +129,6 @@ const ComparePage: React.FC = () => {
     }
   };
 
-  // 🧩 Chart data
   const chartData = useMemo(() => {
     if (!aData || !bData) return [];
     const safe = (v: number | undefined) => Number(v || 0);
@@ -161,15 +171,22 @@ const ComparePage: React.FC = () => {
     ];
   }, [aData, bData]);
 
+  const summaryText = useMemo(() => {
+    if (aData && bData) return voiceTemplatesCompare[language](aData, bData);
+    return "";
+  }, [aData, bData, language]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e8f5e9] via-white to-[#fff3e0] py-24 px-5">
+                                  <Loader />
+
       <motion.div
-        ref={containerRef}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="max-w-6xl mx-auto bg-white/90 rounded-2xl shadow-xl p-8 border border-gray-100"
       >
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6">
           <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800">{t.title}</h1>
@@ -256,7 +273,7 @@ const ComparePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Compare Now */}
+        {/* Compare Button */}
         <div className="flex justify-center mb-6">
           <button
             onClick={handleCompare}
@@ -266,28 +283,40 @@ const ComparePage: React.FC = () => {
           </button>
         </div>
 
-        {/* Main Content */}
-        {loading ? (
-          <div className="flex justify-center items-center py-16 text-gray-500">
-            <Loader2 className="animate-spin mr-2" /> {t.loading}
-          </div>
-        ) : aData && bData ? (
-          <div className="bg-white border rounded-xl shadow-sm p-5">
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="metric" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey={aData.name} fill="#ff9933" radius={[6, 6, 0, 0]} />
-                <Bar dataKey={bData.name} fill="#138808" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <p className="text-center text-gray-500 py-10">{t.noData}</p>
-        )}
+        {/* Data Display Section (Captured by Screenshot) */}
+        <div ref={containerRef}>
+          {loading ? (
+            <div className="flex justify-center items-center py-16 text-gray-500">
+              <Loader2 className="animate-spin mr-2" /> {t.loading}
+            </div>
+          ) : aData && bData ? (
+            <>
+             {/* Summary Section */}
+              <div className="my-6 bg-gray-50 border rounded-xl shadow-sm p-5 whitespace-pre-line text-gray-700 leading-relaxed">
+                {summaryText}
+              </div>
+
+              <div className="bg-white border rounded-xl shadow-sm p-5">
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="metric" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey={aData.name} fill="#ff9933" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey={bData.name} fill="#138808" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+             
+            </>
+          ) : (
+            <p className="text-center text-gray-500 py-10">{t.noData}</p>
+          )}
+        </div>
+        
       </motion.div>
     </div>
   );

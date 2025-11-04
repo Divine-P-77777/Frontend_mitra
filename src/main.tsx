@@ -6,7 +6,6 @@ import "./index.css";
 import { LanguageProvider } from "./context/LanguageContext";
 import { LoaderProvider } from "./hooks/useLoader";
 import { LenisProvider } from "./hooks/useLenis";
-import Loader from "./components/ui/Loader";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
@@ -15,7 +14,6 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <LoaderProvider>
           <LenisProvider>
             <App />
-            <Loader />
           </LenisProvider>
         </LoaderProvider>
       </LanguageProvider>

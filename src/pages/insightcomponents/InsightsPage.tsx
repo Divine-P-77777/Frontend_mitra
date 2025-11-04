@@ -1,3 +1,4 @@
+// /src/pages/InsightsPage.tsx
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Loader2, BarChart2, Search } from "lucide-react";
@@ -13,6 +14,8 @@ import SummaryHeader from "./SummaryHeader";
 import MetricsGrid from "./MetricsGrid";
 import BarChartModal from "./BarChartModal";
 import NoDataModal from "./NoDataModal";
+import Loader from "@/components/ui/Loader";
+
 
 interface Summary {
   name: string;
@@ -60,17 +63,14 @@ export default function InsightsPage() {
   const abortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Handle typing, show suggestions only if input focused
+  // Debounced district suggestions
   useEffect(() => {
     if (!query.trim() || !inputFocused) {
       setSuggestions([]);
       return;
     }
-
     setLoadingSuggestions(true);
-
     if (debounceRef.current) clearTimeout(debounceRef.current);
-
     debounceRef.current = window.setTimeout(async () => {
       try {
         const list = await fetchDistrictSuggestions(query);
@@ -81,39 +81,30 @@ export default function InsightsPage() {
         setLoadingSuggestions(false);
       }
     }, 300);
-
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [query, inputFocused]);
 
+  const allDataEmpty = useCallback((obj: any) => {
+    const keysToCheck = [
+      "approvedLabourBudget",
+      "averageWageRate",
+      "averageDaysEmployment",
+      "totalHouseholdsWorked",
+      "totalIndividualsWorked",
+      "totalExpenditure",
+      "womenPersondays",
+      "scPersondays",
+      "stPersondays",
+      "completedWorks",
+      "ongoingWorks",
+    ];
+    return keysToCheck.every(
+      (key) => obj == null || obj[key] == null || obj[key] === 0 || obj[key] === ""
+    );
+  }, []);
 
-  const allDataEmpty = useCallback(
-    (obj: any) => {
-      // Ignore basic fields, only check metrics. Adjust field names as necessary.
-      const keysToCheck = [
-        "approvedLabourBudget",
-        "averageWageRate",
-        "averageDaysEmployment",
-        "totalHouseholdsWorked",
-        "totalIndividualsWorked",
-        "totalExpenditure",
-        "womenPersondays",
-        "scPersondays",
-        "stPersondays",
-        "completedWorks",
-        "ongoingWorks"
-      ];
-      return keysToCheck.every(
-        (key) =>
-          obj == null ||
-          obj[key] == null || obj[key] === 0 || obj[key] === ""
-      );
-    },
-    []
-  );
-
-  // Fetch summary (only by explicit button click or location auto trigger)
   const fetchSummary = async (districtName: string) => {
     if (!districtName) return;
     setSummary(null);
@@ -128,11 +119,6 @@ export default function InsightsPage() {
       if (allDataEmpty(json)) {
         setNoDataDistrict(districtName);
         setNoDataModal(true);
-        setSummary(null);
-        return;
-      }
-      if (!json || Object.keys(json).length === 0) {
-        setError("No data available for this district.");
         setSummary(null);
         return;
       }
@@ -164,12 +150,9 @@ export default function InsightsPage() {
     }
   };
 
-  // Use my location
+  // Use location for district
   const handleUseLocation = async () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported.");
-      return;
-    }
+    if (!navigator.geolocation) return alert("Geolocation not supported.");
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -182,10 +165,7 @@ export default function InsightsPage() {
           if (data?.district) {
             setQuery(data.district);
             setAutoTrigger(true);
-            // This effect will trigger fetching insights below
-          } else {
-            alert("Could not detect district.");
-          }
+          } else alert("Could not detect district.");
         } catch {
           alert("Failed to fetch district info.");
         } finally {
@@ -199,22 +179,18 @@ export default function InsightsPage() {
     );
   };
 
-  // Auto-trigger insights fetch if instructed by location
   useEffect(() => {
     if (autoTrigger && query.trim().length > 3) {
       fetchSummary(query);
       setAutoTrigger(false);
     }
-    // eslint-disable-next-line
   }, [autoTrigger, query]);
 
-  // Handle NoDataModal close: hide and refocus input
   const handleModalClose = () => {
     setNoDataModal(false);
     setTimeout(() => inputRef.current?.focus(), 200);
   };
 
-  // Voice summary toggle
   const handleVoiceSummary = () => {
     if (!summary) return;
     if (isSpeaking) {
@@ -228,37 +204,29 @@ export default function InsightsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FF9933]/10 via-white to-[#138808]/10 px-4 pt-24 pb-10">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-5xl mx-auto">
+      <Loader />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-5xl mx-auto"
+      >
         {/* 🌍 Header */}
         <header className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-heading font-semibold text-gray-900 mb-3">{t.title}</h1>
+          <h1 className="text-3xl sm:text-4xl font-heading font-semibold text-gray-900 mb-3">
+            {t.title}
+          </h1>
           <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
             {lang === "hi"
               ? "अपने जिले के MGNREGA आंकड़ों को खोजें, सुनें और समझें।"
               : lang === "as"
-                ? "আপোনাৰ জিলাৰ MGNREGA তথ্য অনুসন্ধান কৰক, শুনক আৰু বুজক।"
-                : "Search, listen to, and understand MGNREGA district data easily."}
+              ? "আপোনাৰ জিলাৰ MGNREGA তথ্য অনুসন্ধান কৰক, শুনক আৰু বুজক।"
+              : "Search, listen to, and understand MGNREGA district data easily."}
           </p>
         </header>
 
-        {/* 🔍 Search + Location */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
-          <div className="flex-1 min-w-[250px]">
-            <SearchBox
-              ref={inputRef}
-              query={query}
-              setQuery={setQuery}
-              suggestions={inputFocused ? suggestions : []}
-              loading={loadingSuggestions}
-              placeholder={t.placeholder || "Search district..."}
-              onSelect={val => setQuery(val)} // Just updates the input, does NOT fetch
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setTimeout(() => setInputFocused(false), 200)}
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center mx-auto mb-6">
+        {/* 🧭 Use Location (moved above search) */}
+        <div className="flex justify-center mb-4">
           <button
             onClick={handleUseLocation}
             disabled={locating}
@@ -269,42 +237,100 @@ export default function InsightsPage() {
           </button>
         </div>
 
+        {/* 🔍 Search with animated height expansion */}
+        <motion.div
+          layout
+          className="flex flex-col sm:flex-row gap-3 justify-center mb-6 relative"
+        >
+          <div className="flex-1 min-w-[250px]">
+            <SearchBox
+              ref={inputRef}
+              query={query}
+              setQuery={setQuery}
+              suggestions={inputFocused ? suggestions : []}
+              loading={loadingSuggestions}
+              placeholder={t.placeholder || "Search district..."}
+              onSelect={(val) => {
+                // Delay to avoid blur race condition
+                setTimeout(() => setQuery(val), 100);
+              }}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setTimeout(() => setInputFocused(false), 200)}
+            />
+          </div>
+        </motion.div>
+
         {/* 🔘 View Insights */}
-        <div className="text-center mb-8">
+        <motion.div layout className="text-center mb-8">
           <button
             onClick={() => query.trim().length > 3 && fetchSummary(query)}
             disabled={query.trim().length <= 3 || loadingSummary}
-            className={`px-6 py-3 rounded-xl font-medium transition-all shadow-md flex mx-auto items-center gap-2 ${query.trim().length > 3
-              ? "bg-[#007BFF] hover:bg-[#005FCC] text-white"
-              : "bg-gray-200 text-gray-500 cursor-not-allowed"
-              }`}
+            className={`px-6 py-3 rounded-xl font-medium transition-all shadow-md flex mx-auto items-center gap-2 ${
+              query.trim().length > 3
+                ? "bg-[#007BFF] hover:bg-[#005FCC] text-white"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            }`}
           >
             {loadingSummary ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
             {t.viewInsights || "View Insights"}
           </button>
-        </div>
+        </motion.div>
 
         {/* 🧾 Results */}
         <AnimatePresence mode="wait">
           {loadingSummary && (
-            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex justify-center py-10">
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center py-10"
+            >
               <Loader2 className="animate-spin text-[#007BFF]" size={40} />
             </motion.div>
           )}
+
           {error && (
-            <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center text-red-500 bg-red-50 py-6 rounded-xl shadow-sm">
+            <motion.div
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center text-red-500 bg-red-50 py-6 rounded-xl shadow-sm"
+            >
               {error}
             </motion.div>
           )}
+
           {summary && !loadingSummary && (
-            <motion.div key="summary" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }} className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-              <SummaryHeader summary={summary} isSpeaking={isSpeaking} onVoiceToggle={handleVoiceSummary} langLabel={t.listenSummary} />
+            <motion.div
+              key="summary"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg mb-20"
+            >
+              <SummaryHeader
+                summary={summary}
+                isSpeaking={isSpeaking}
+                onVoiceToggle={handleVoiceSummary}
+                langLabel={t.listenSummary}
+              />
               <MetricsGrid summary={summary} metricLabels={metricLabels} />
               <div className="flex justify-center gap-4 mt-6">
-                <button onClick={() => setShowModal(true)} className="px-6 py-2.5 text-sm rounded-md bg-blue-100 hover:bg-blue-200 transition font-medium flex items-center gap-2">
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="px-6 py-2.5 text-sm rounded-md bg-blue-100 hover:bg-blue-200 transition font-medium flex items-center gap-2"
+                >
                   <BarChart2 size={16} /> View Chart
                 </button>
-                <button onClick={() => navigate(`/compare?name=${encodeURIComponent(summary.name)}`)} className="px-6 py-2.5 text-sm rounded-md bg-green-100 hover:bg-green-200 transition font-medium flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    navigate(`/compare?name=${encodeURIComponent(summary.name)}`)
+                  }
+                  className="px-6 py-2.5 text-sm rounded-md bg-green-100 hover:bg-green-200 transition font-medium flex items-center gap-2"
+                >
                   Compare District
                 </button>
               </div>
@@ -312,6 +338,7 @@ export default function InsightsPage() {
           )}
         </AnimatePresence>
       </motion.div>
+
       <NoDataModal show={noDataModal} district={noDataDistrict} onClose={handleModalClose} />
       <BarChartModal open={showModal} onClose={() => setShowModal(false)} summary={summary} />
     </div>

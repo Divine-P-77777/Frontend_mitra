@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Poppins:wght@500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+
 @import "tailwindcss";
-
-
 
 :root {
   --font-body: 'Inter', 'Noto Sans Devanagari', sans-serif;

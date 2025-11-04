@@ -13,7 +13,10 @@ interface SearchBoxProps {
 }
 
 const SearchBox = forwardRef<HTMLInputElement, SearchBoxProps>(
-  ({ query, setQuery, suggestions, loading, onSelect, placeholder, onFocus, onBlur }, ref) => {
+  (
+    { query, setQuery, suggestions, loading, onSelect, placeholder, onFocus, onBlur },
+    ref
+  ) => {
     const [activeIndex, setActiveIndex] = useState<number>(-1);
 
     // Keyboard navigation
@@ -23,16 +26,13 @@ const SearchBox = forwardRef<HTMLInputElement, SearchBoxProps>(
       } else if (e.key === "ArrowUp") {
         setActiveIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === "Enter") {
-        if (activeIndex >= 0) {
-          onSelect(suggestions[activeIndex]);
-        } else {
-          onSelect(query);
-        }
+        if (activeIndex >= 0) onSelect(suggestions[activeIndex]);
+        else onSelect(query);
         setActiveIndex(-1);
       }
     };
 
-    // Reset active index when suggestions change
+    // Reset highlight on new suggestions
     useEffect(() => setActiveIndex(-1), [suggestions]);
 
     return (
@@ -41,6 +41,7 @@ const SearchBox = forwardRef<HTMLInputElement, SearchBoxProps>(
           <Search size={18} />
           Search by District
         </div>
+
         <div className="relative">
           <input
             ref={ref}
@@ -50,9 +51,11 @@ const SearchBox = forwardRef<HTMLInputElement, SearchBoxProps>(
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={onFocus}
-            onBlur={onBlur}
+            // Delay blur to allow click to finish
+            onBlur={() => setTimeout(() => onBlur && onBlur(), 200)}
             autoComplete="off"
           />
+
           {loading && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
               <Loader2 className="animate-spin" size={18} />
@@ -60,21 +63,26 @@ const SearchBox = forwardRef<HTMLInputElement, SearchBoxProps>(
           )}
         </div>
 
+        {/* Suggestions */}
         {suggestions.length > 0 && (
           <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto">
             {suggestions.map((s, i) => (
               <li
                 key={s}
-                onClick={() => {
+                // 👇 onMouseDown fires before blur, ensuring this runs on desktop
+                onMouseDown={(e) => {
+                  e.preventDefault();
                   setQuery(s);
+                  onSelect(s);
                   if (ref && typeof ref !== "function" && ref.current) {
                     ref.current.blur();
                   }
-                  onSelect(s);
                 }}
                 onMouseEnter={() => setActiveIndex(i)}
                 className={`px-4 py-2 cursor-pointer transition-colors ${
-                  i === activeIndex ? "bg-[#FFD60A]/30 text-gray-900 font-semibold" : "hover:bg-[#FFD60A]/20"
+                  i === activeIndex
+                    ? "bg-[#FFD60A]/30 text-gray-900 font-semibold"
+                    : "hover:bg-[#FFD60A]/20"
                 }`}
               >
                 {s}

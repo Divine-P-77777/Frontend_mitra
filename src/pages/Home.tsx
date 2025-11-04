@@ -2,6 +2,7 @@ import  { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { speakText, stopSpeech } from "@/lib/textToSpeech";
+import Loader from "@/components/ui/Loader";
 import {
   BarChart3,
   HelpCircle,
@@ -28,6 +29,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#FF9933]/20 via-white to-[#138808]/20 text-center px-6 py-28 relative overflow-hidden">
       {/* Animated background glow */}
+      <Loader />
       <div className="absolute inset-0 bg-gradient-to-r from-[#FF9933]/10 via-transparent to-[#138808]/10 animate-[gradientMove_10s_linear_infinite]"></div>
 
       {/* Hero Section */}

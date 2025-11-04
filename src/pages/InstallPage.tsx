@@ -6,6 +6,7 @@ import type { LanguageOption as Lang } from "@/context/LanguageContext";
 import { Volume2, Info, Loader2, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { speakText } from "@/lib/textToSpeech";
+import Loader from "@/components/ui/Loader";
 
 declare global {
   interface Window {
@@ -105,6 +106,7 @@ export default function InstallPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12 bg-gradient-to-br from-orange-50 via-white to-green-50 text-[#1A1A2E]">
+      <Loader />
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
