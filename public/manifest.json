@@ -1,0 +1,26 @@
+{
+  "name": "Mitra - Bharat’s Voice for MGNREGA Insights",
+  "short_name": "Mitra",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "en-IN",
+  "background_color": "#fff8e1",
+  "theme_color": "#ff9933",
+  "description": "Mitra is a citizen-friendly platform that helps every Indian understand their district’s MGNREGA performance through easy visuals, real-time translation, and voice summaries — empowering Bharat, one insight at a time.",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon512_rounded.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

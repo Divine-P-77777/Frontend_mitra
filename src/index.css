@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Poppins:wght@500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+
+
+:root {
+  --font-body: 'Inter', 'Noto Sans Devanagari', sans-serif;
+  --font-heading: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+  --font-paragraph: 'Inter', 'Noto Sans Devanagari', sans-serif;
+  --font-button: 'Poppins', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+}
+
+
+html {
+  font-family: var(--font-body);
+  scroll-behavior: smooth;
+}
+
+body {
+
+  font-family: var(--font-body);
+}
+
+/* Headings */
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+/* Paragraphs & List items */
+p, li {
+  font-family: var(--font-paragraph);
+  line-height: 1.7;
+}
+
+/* Buttons */
+button, .btn {
+  font-family: var(--font-button);
+
+
+}
+
+/* Charts / Numbers */
+.code, .mono, .stat, pre, code {
+  font-family: var(--font-mono);
+}
+
+
+/* Navbar fade & translation smoothing */
+html,
+body,
+nav,
+main {
+  transition: all 0.3s ease;
+}
+
+/* Hide Google Translate banner/frame */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-gadget-icon {
+  display: none !important;
+}
+
+
+a.active {
+  background: linear-gradient(90deg, #FF9933, #FFD60A, #138808);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 600;
+}

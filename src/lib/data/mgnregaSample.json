@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Nalbari",
+    "state": "Assam",
+    "year": 2024,
+    "employmentRate": 72.4,
+    "fundsAllocated": 150.0,
+    "fundsUtilized": 134.2,
+    "households": 54000,
+    "workers": 89000,
+    "persondaysGenerated": 1250000,
+    "avgDaysPerHH": 46,
+    "womenParticipation": 51.3,
+    "scParticipation": 18.5,
+    "stParticipation": 12.8
+  },
+  {
+    "name": "Patna",
+    "state": "Bihar",
+    "year": 2024,
+    "employmentRate": 68.1,
+    "fundsAllocated": 165.0,
+    "fundsUtilized": 156.3,
+    "households": 61000,
+    "workers": 99000,
+    "persondaysGenerated": 1420000,
+    "avgDaysPerHH": 49,
+    "womenParticipation": 47.6,
+    "scParticipation": 21.4,
+    "stParticipation": 6.9
+  },
+  {
+    "name": "Jaipur",
+    "state": "Rajasthan",
+    "year": 2024,
+    "employmentRate": 75.2,
+    "fundsAllocated": 155.0,
+    "fundsUtilized": 142.0,
+    "households": 58000,
+    "workers": 94000,
+    "persondaysGenerated": 1350000,
+    "avgDaysPerHH": 51,
+    "womenParticipation": 50.9,
+    "scParticipation": 22.1,
+    "stParticipation": 9.2
+  },
+  {
+    "name": "Pune",
+    "state": "Maharashtra",
+    "year": 2024,
+    "employmentRate": 70.3,
+    "fundsAllocated": 130.0,
+    "fundsUtilized": 120.5,
+    "households": 50000,
+    "workers": 82000,
+    "persondaysGenerated": 1150000,
+    "avgDaysPerHH": 43,
+    "womenParticipation": 45.1,
+    "scParticipation": 17.3,
+    "stParticipation": 11.0
+  }
+]
